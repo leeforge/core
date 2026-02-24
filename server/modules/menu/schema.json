@@ -1,0 +1,193 @@
+{
+  "$schema": "https://raw.githubusercontent.com/leeforge/schema/main/schema.json",
+  "name": "Menu",
+  "description": "System Menus",
+  "softDelete": true,
+  "info": {
+    "collectionName": "menus",
+    "displayName": "Menu Management",
+    "description": "Manage system menus and routes",
+    "icon": "Menu",
+    "locale": "en-US"
+  },
+  "ui": {
+    "submitText": "Save",
+    "resetText": "Reset",
+    "showReset": true,
+    "layout": {
+      "direction": "vertical",
+      "gap": 16,
+      "columns": 2
+    }
+  },
+  "features": {
+    "softDelete": true,
+    "export": true,
+    "import": true,
+    "batch": false
+  },
+  "properties": {
+    "id": {
+      "type": "uid",
+      "label": "ID",
+      "description": "Unique Identifier",
+      "private": true,
+      "writable": false,
+      "ui": {
+        "showInList": true,
+        "showInForm": false
+      }
+    },
+    "parent_id": {
+      "type": "uid",
+      "label": "Parent Menu",
+      "ui": {
+        "widget": "select",
+        "span": 24,
+        "showInList": false,
+        "showInForm": true
+      }
+    },
+    "name": {
+      "type": "string",
+      "label": "Route Name",
+      "validate": {
+        "required": true
+      },
+      "ui": {
+        "widget": "text",
+        "span": 12,
+        "showInList": true,
+        "showInForm": true,
+        "filterable": true
+      },
+      "queryable": true,
+      "exportable": true
+    },
+    "path": {
+      "type": "string",
+      "label": "Route Path",
+      "validate": {
+        "required": true
+      },
+      "ui": {
+        "widget": "text",
+        "span": 12,
+        "showInList": true,
+        "showInForm": true
+      },
+      "queryable": true,
+      "exportable": true
+    },
+    "component": {
+      "type": "string",
+      "label": "Component",
+      "ui": {
+        "widget": "text",
+        "span": 12,
+        "showInList": true,
+        "showInForm": true
+      },
+      "exportable": true
+    },
+    "redirect": {
+      "type": "string",
+      "label": "Redirect",
+      "ui": {
+        "widget": "text",
+        "span": 12,
+        "showInList": false,
+        "showInForm": true
+      },
+      "exportable": true
+    },
+    "icon": {
+      "type": "string",
+      "label": "Icon",
+      "ui": {
+        "widget": "text",
+        "span": 12,
+        "showInList": true,
+        "showInForm": true
+      },
+      "exportable": true
+    },
+    "sort": {
+      "type": "integer",
+      "label": "Sort",
+      "default": 0,
+      "ui": {
+        "widget": "number",
+        "span": 6,
+        "showInList": true,
+        "showInForm": true
+      },
+      "exportable": true
+    },
+    "hidden": {
+      "type": "boolean",
+      "label": "Hidden",
+      "default": false,
+      "ui": {
+        "widget": "switch",
+        "span": 6,
+        "showInList": true,
+        "showInForm": true
+      },
+      "exportable": true
+    },
+    "affix": {
+      "type": "boolean",
+      "label": "Affix",
+      "default": false,
+      "ui": {
+        "widget": "switch",
+        "span": 6,
+        "showInList": false,
+        "showInForm": true
+      },
+      "exportable": true
+    },
+    "meta": {
+      "type": "json",
+      "label": "Meta",
+      "default": {},
+      "ui": {
+        "widget": "textarea",
+        "span": 24,
+        "showInList": false,
+        "showInForm": true
+      }
+    },
+    "children": {
+      "$ref": "Menu",
+      "label": "Sub Menus",
+      "$relation": {
+        "type": "one2Many",
+        "labelField": "name"
+      }
+    },
+    "createdAt": {
+      "type": "datetime",
+      "label": "Created At",
+      "writable": false,
+      "ui": {
+        "widget": "datetime",
+        "showInList": true,
+        "showInForm": false
+      },
+      "exportable": true
+    },
+    "updatedAt": {
+      "type": "datetime",
+      "label": "Updated At",
+      "writable": false,
+      "ui": {
+        "widget": "datetime",
+        "showInList": true,
+        "showInForm": false
+      },
+      "exportable": true
+    }
+  }
+}

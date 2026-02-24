@@ -1,0 +1,202 @@
+{
+  "$schema": "https://raw.githubusercontent.com/leeforge/schema/main/schema.json",
+  "name": "ApiKey",
+  "description": "API Keys",
+  "softDelete": true,
+  "info": {
+    "collectionName": "api_keys",
+    "displayName": "API Keys",
+    "description": "Manage API access keys",
+    "icon": "Key",
+    "locale": "en-US"
+  },
+  "ui": {
+    "submitText": "Save",
+    "resetText": "Reset",
+    "showReset": true,
+    "layout": {
+      "direction": "vertical",
+      "gap": 16,
+      "columns": 2
+    }
+  },
+  "features": {
+    "softDelete": true,
+    "export": true,
+    "import": false,
+    "batch": false
+  },
+  "properties": {
+    "id": {
+      "type": "uid",
+      "label": "ID",
+      "description": "Unique Identifier",
+      "private": true,
+      "writable": false,
+      "ui": {
+        "showInList": true,
+        "showInForm": false
+      }
+    },
+    "name": {
+      "type": "string",
+      "label": "Name",
+      "validate": {
+        "required": true
+      },
+      "ui": {
+        "widget": "text",
+        "span": 12,
+        "showInList": true,
+        "showInForm": true,
+        "filterable": true
+      },
+      "queryable": true,
+      "exportable": true
+    },
+    "description": {
+      "type": "string",
+      "label": "Description",
+      "ui": {
+        "widget": "textarea",
+        "span": 24,
+        "showInList": true,
+        "showInForm": true
+      },
+      "exportable": true
+    },
+    "key": {
+      "type": "string",
+      "label": "Access Key",
+      "writable": false,
+      "ui": {
+        "widget": "text",
+        "span": 24,
+        "showInList": true,
+        "showInForm": true,
+        "filterable": true
+      },
+      "queryable": true,
+      "exportable": true
+    },
+    "secret_hash": {
+      "type": "string",
+      "label": "Secret Hash",
+      "private": true,
+      "ui": {
+        "showInList": false,
+        "showInForm": false
+      }
+    },
+    "expires_at": {
+      "type": "datetime",
+      "label": "Expires At",
+      "ui": {
+        "widget": "datetime",
+        "span": 12,
+        "showInList": true,
+        "showInForm": true
+      },
+      "queryable": true,
+      "exportable": true
+    },
+    "rate_limit": {
+      "type": "integer",
+      "label": "Rate Limit (RPM)",
+      "default": 60,
+      "ui": {
+        "widget": "number",
+        "span": 6,
+        "showInList": true,
+        "showInForm": true
+      },
+      "exportable": true
+    },
+    "daily_limit": {
+      "type": "integer",
+      "label": "Daily Limit",
+      "default": 10000,
+      "ui": {
+        "widget": "number",
+        "span": 6,
+        "showInList": true,
+        "showInForm": true
+      },
+      "exportable": true
+    },
+    "usage_count": {
+      "type": "integer",
+      "label": "Usage Count",
+      "default": 0,
+      "writable": false,
+      "ui": {
+        "widget": "number",
+        "showInList": true,
+        "showInForm": false
+      },
+      "exportable": true
+    },
+    "is_active": {
+      "type": "boolean",
+      "label": "Active",
+      "default": true,
+      "ui": {
+        "widget": "switch",
+        "span": 6,
+        "showInList": true,
+        "showInForm": true
+      },
+      "queryable": true,
+      "exportable": true
+    },
+    "owner": {
+      "$ref": "User",
+      "label": "Owner",
+      "$relation": {
+        "type": "many2One",
+        "labelField": "username"
+      },
+      "ui": {
+        "widget": "select",
+        "showInList": true,
+        "showInForm": true
+      }
+    },
+    "role": {
+      "$ref": "Role",
+      "label": "Role",
+      "$relation": {
+        "type": "many2One",
+        "labelField": "name"
+      },
+      "ui": {
+        "widget": "select",
+        "showInList": true,
+        "showInForm": true
+      }
+    },
+    "createdAt": {
+      "type": "datetime",
+      "label": "Created At",
+      "writable": false,
+      "ui": {
+        "widget": "datetime",
+        "showInList": true,
+        "showInForm": false,
+        "sortable": true
+      },
+      "exportable": true
+    },
+    "updatedAt": {
+      "type": "datetime",
+      "label": "Updated At",
+      "writable": false,
+      "ui": {
+        "widget": "datetime",
+        "showInList": true,
+        "showInForm": false
+      },
+      "exportable": true
+    }
+  }
+}

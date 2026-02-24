@@ -1,0 +1,147 @@
+{
+  "$schema": "https://raw.githubusercontent.com/leeforge/schema/main/schema.json",
+  "name": "Dictionary",
+  "description": "System Data Dictionaries",
+  "softDelete": true,
+  "info": {
+    "collectionName": "dictionaries",
+    "displayName": "Data Dictionary",
+    "description": "Manage system constants and enumerations",
+    "icon": "Book",
+    "locale": "en-US"
+  },
+  "ui": {
+    "submitText": "Save",
+    "resetText": "Reset",
+    "showReset": true,
+    "layout": {
+      "direction": "vertical",
+      "gap": 16,
+      "columns": 2
+    }
+  },
+  "features": {
+    "softDelete": true,
+    "export": true,
+    "import": true,
+    "batch": false
+  },
+  "properties": {
+    "id": {
+      "type": "uid",
+      "label": "ID",
+      "description": "Unique Identifier",
+      "private": true,
+      "writable": false,
+      "ui": {
+        "showInList": true,
+        "showInForm": false
+      }
+    },
+    "code": {
+      "type": "string",
+      "label": "Code",
+      "validate": {
+        "required": true
+      },
+      "unique": true,
+      "ui": {
+        "widget": "text",
+        "span": 12,
+        "showInList": true,
+        "showInForm": true,
+        "filterable": true
+      },
+      "queryable": true,
+      "exportable": true
+    },
+    "name": {
+      "type": "string",
+      "label": "Name",
+      "validate": {
+        "required": true
+      },
+      "ui": {
+        "widget": "text",
+        "span": 12,
+        "showInList": true,
+        "showInForm": true,
+        "filterable": true
+      },
+      "queryable": true,
+      "exportable": true
+    },
+    "description": {
+      "type": "string",
+      "label": "Description",
+      "ui": {
+        "widget": "textarea",
+        "span": 24,
+        "showInList": true,
+        "showInForm": true
+      },
+      "exportable": true
+    },
+    "status": {
+      "type": "boolean",
+      "label": "Status",
+      "default": true,
+      "ui": {
+        "widget": "switch",
+        "span": 6,
+        "showInList": true,
+        "showInForm": true
+      },
+      "queryable": true,
+      "exportable": true
+    },
+    "parent_id": {
+      "type": "uid",
+      "label": "Parent Dictionary",
+      "ui": {
+        "widget": "select",
+        "span": 24,
+        "showInList": false,
+        "showInForm": true
+      }
+    },
+    "items": {
+      "$ref": "DictionaryDetail",
+      "label": "Dictionary Items",
+      "$relation": {
+        "type": "one2Many",
+        "labelField": "label"
+      }
+    },
+    "children": {
+      "$ref": "Dictionary",
+      "label": "Sub Dictionaries",
+      "$relation": {
+        "type": "one2Many",
+        "labelField": "name"
+      }
+    },
+    "createdAt": {
+      "type": "datetime",
+      "label": "Created At",
+      "writable": false,
+      "ui": {
+        "widget": "datetime",
+        "showInList": true,
+        "showInForm": false
+      },
+      "exportable": true
+    },
+    "updatedAt": {
+      "type": "datetime",
+      "label": "Updated At",
+      "writable": false,
+      "ui": {
+        "widget": "datetime",
+        "showInList": true,
+        "showInForm": false
+      },
+      "exportable": true
+    }
+  }
+}

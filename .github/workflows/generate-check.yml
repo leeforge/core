@@ -1,0 +1,45 @@
+name: Verify Generated Code
+
+# 当 server/ent/schema 变动时，校验生成代码是否已提交。
+# 若过期，CI 报错并提示开发者本地运行 make generate。
+
+on:
+  pull_request:
+    paths:
+      - 'server/ent/schema/**'
+      - '.github/workflows/generate-check.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'server/ent/schema/**'
+  workflow_dispatch: {}
+
+jobs:
+  verify-ent:
+    name: server/ent
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - name: Generate
+        run: GOWORK=off GOFLAGS=-mod=mod go generate ./...
+
+      - name: Verify no uncommitted changes
+        run: |
+          if ! git diff --quiet -- server/ent/; then
+            echo ""
+            echo "❌  server/ent generated code is out of date."
+            echo "    Please run the following and commit the result:"
+            echo ""
+            echo "      make generate"
+            echo ""
+            git diff -- server/ent/
+            exit 1
+          fi
+          echo "✅  server/ent is up to date."

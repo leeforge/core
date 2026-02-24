@@ -1,0 +1,164 @@
+{
+  "$schema": "https://raw.githubusercontent.com/leeforge/schema/main/schema.json",
+  "name": "Role",
+  "description": "System Roles",
+  "softDelete": true,
+  "info": {
+    "collectionName": "roles",
+    "displayName": "Role Management",
+    "description": "Manage user roles and permissions",
+    "icon": "SafetyCertificate",
+    "locale": "en-US"
+  },
+  "ui": {
+    "submitText": "Save",
+    "resetText": "Reset",
+    "showReset": true,
+    "layout": {
+      "direction": "vertical",
+      "gap": 16,
+      "columns": 2
+    }
+  },
+  "features": {
+    "softDelete": true,
+    "export": true,
+    "import": true,
+    "batch": false
+  },
+  "properties": {
+    "id": {
+      "type": "uid",
+      "label": "ID",
+      "description": "Unique Identifier",
+      "private": true,
+      "writable": false,
+      "ui": {
+        "showInList": true,
+        "showInForm": false
+      }
+    },
+    "name": {
+      "type": "string",
+      "label": "Name",
+      "description": "Role Name",
+      "validate": {
+        "required": true
+      },
+      "unique": true,
+      "ui": {
+        "widget": "text",
+        "span": 12,
+        "showInList": true,
+        "showInForm": true,
+        "sortable": true,
+        "filterable": true
+      },
+      "queryable": true,
+      "exportable": true
+    },
+    "code": {
+      "type": "string",
+      "label": "Code",
+      "description": "Role Code",
+      "validate": {
+        "required": true,
+        "maxLength": 50
+      },
+      "unique": true,
+      "ui": {
+        "widget": "text",
+        "span": 12,
+        "showInList": true,
+        "showInForm": true,
+        "filterable": true
+      },
+      "queryable": true,
+      "exportable": true
+    },
+    "description": {
+      "type": "text",
+      "label": "Description",
+      "ui": {
+        "widget": "textarea",
+        "span": 24,
+        "showInList": true,
+        "showInForm": true
+      },
+      "exportable": true
+    },
+    "sort": {
+      "type": "integer",
+      "label": "Sort",
+      "default": 0,
+      "ui": {
+        "widget": "number",
+        "span": 6,
+        "showInList": true,
+        "showInForm": true
+      },
+      "queryable": true
+    },
+    "is_system": {
+      "type": "boolean",
+      "label": "System Role",
+      "default": false,
+      "ui": {
+        "widget": "switch",
+        "span": 6,
+        "showInList": true,
+        "showInForm": true
+      },
+      "queryable": true
+    },
+    "permissions": {
+      "type": "json",
+      "label": "Permissions",
+      "default": [],
+      "ui": {
+        "widget": "textarea",
+        "span": 24,
+        "showInList": false,
+        "showInForm": false
+      }
+    },
+    "menus": {
+      "$ref": "Menu",
+      "label": "Menu Permissions",
+      "$relation": {
+        "type": "many2Many",
+        "labelField": "title"
+      },
+      "ui": {
+        "widget": "select",
+        "multiple": true,
+        "span": 24,
+        "showInList": false,
+        "showInForm": true
+      }
+    },
+    "createdAt": {
+      "type": "datetime",
+      "label": "Created At",
+      "writable": false,
+      "ui": {
+        "widget": "datetime",
+        "showInList": true,
+        "showInForm": false,
+        "sortable": true
+      },
+      "exportable": true
+    },
+    "updatedAt": {
+      "type": "datetime",
+      "label": "Updated At",
+      "writable": false,
+      "ui": {
+        "widget": "datetime",
+        "showInList": true,
+        "showInForm": false
+      },
+      "exportable": true
+    }
+  }
+}

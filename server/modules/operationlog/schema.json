@@ -1,0 +1,134 @@
+{
+  "$schema": "https://raw.githubusercontent.com/leeforge/schema/main/schema.json",
+  "name": "OperationLog",
+  "description": "System Operation Logs",
+  "softDelete": false,
+  "info": {
+    "collectionName": "operation_logs",
+    "displayName": "Operation Logs",
+    "description": "View system operation records",
+    "icon": "FileText",
+    "locale": "en-US"
+  },
+  "ui": {
+    "submitText": "",
+    "resetText": "",
+    "showReset": false,
+    "layout": {
+      "direction": "vertical",
+      "gap": 16,
+      "columns": 2
+    }
+  },
+  "features": {
+    "softDelete": false,
+    "export": true,
+    "import": false,
+    "batch": false
+  },
+  "properties": {
+    "id": {
+      "type": "uid",
+      "label": "ID",
+      "description": "Unique Identifier",
+      "private": true,
+      "ui": {
+        "showInList": true,
+        "showInForm": true
+      }
+    },
+    "request_id": {
+      "type": "string",
+      "label": "Request ID",
+      "ui": {
+        "widget": "text",
+        "showInList": true,
+        "showInForm": true,
+        "filterable": true
+      },
+      "queryable": true,
+      "exportable": true
+    },
+    "method": {
+      "type": "string",
+      "label": "Method",
+      "ui": {
+        "widget": "text",
+        "showInList": true,
+        "showInForm": true,
+        "filterable": true
+      },
+      "queryable": true,
+      "exportable": true
+    },
+    "path": {
+      "type": "string",
+      "label": "Path",
+      "ui": {
+        "widget": "text",
+        "showInList": true,
+        "showInForm": true,
+        "filterable": true
+      },
+      "queryable": true,
+      "exportable": true
+    },
+    "status": {
+      "type": "integer",
+      "label": "Status",
+      "ui": {
+        "widget": "text",
+        "showInList": true,
+        "showInForm": true,
+        "filterable": true
+      },
+      "queryable": true,
+      "exportable": true
+    },
+    "latency": {
+      "type": "integer",
+      "label": "Latency (ns)",
+      "ui": {
+        "widget": "text",
+        "showInList": true,
+        "showInForm": true
+      },
+      "exportable": true
+    },
+    "client_ip": {
+      "type": "string",
+      "label": "Client IP",
+      "ui": {
+        "widget": "text",
+        "showInList": true,
+        "showInForm": true
+      },
+      "exportable": true
+    },
+    "user": {
+      "$ref": "User",
+      "label": "Operator",
+      "$relation": {
+        "type": "many2One",
+        "labelField": "nickname"
+      },
+      "ui": {
+        "widget": "select",
+        "showInList": true,
+        "showInForm": true
+      }
+    },
+    "createdAt": {
+      "type": "datetime",
+      "label": "Created At",
+      "writable": false,
+      "ui": {
+        "widget": "datetime",
+        "showInList": true,
+        "showInForm": false,
+        "sortable": true
+      },
+      "exportable": true
+    }
+  }
+}

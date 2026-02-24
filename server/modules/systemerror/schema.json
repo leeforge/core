@@ -1,0 +1,129 @@
+{
+  "$schema": "https://raw.githubusercontent.com/leeforge/schema/main/schema.json",
+  "name": "SystemError",
+  "description": "System Error Logs",
+  "softDelete": false,
+  "info": {
+    "collectionName": "system_errors",
+    "displayName": "Error Logs",
+    "description": "View system error records",
+    "icon": "Warning",
+    "locale": "en-US"
+  },
+  "ui": {
+    "submitText": "",
+    "resetText": "",
+    "showReset": false,
+    "layout": {
+      "direction": "vertical",
+      "gap": 16,
+      "columns": 2
+    }
+  },
+  "features": {
+    "softDelete": false,
+    "export": true,
+    "import": false,
+    "batch": false
+  },
+  "properties": {
+    "id": {
+      "type": "uid",
+      "label": "ID",
+      "description": "Unique Identifier",
+      "private": true,
+      "ui": {
+        "showInList": true,
+        "showInForm": true
+      }
+    },
+    "error_level": {
+      "type": "enum",
+      "label": "Level",
+      "validate": {
+        "enum": ["info", "warning", "error", "critical"]
+      },
+      "ui": {
+        "widget": "select",
+        "showInList": true,
+        "showInForm": true,
+        "filterable": true,
+        "options": [
+          { "value": "info", "label": "Info" },
+          { "value": "warning", "label": "Warning" },
+          { "value": "error", "label": "Error" },
+          { "value": "critical", "label": "Critical" }
+        ]
+      },
+      "queryable": true,
+      "exportable": true
+    },
+    "error_type": {
+      "type": "string",
+      "label": "Type",
+      "ui": {
+        "widget": "text",
+        "showInList": true,
+        "showInForm": true,
+        "filterable": true
+      },
+      "queryable": true,
+      "exportable": true
+    },
+    "error_msg": {
+      "type": "string",
+      "label": "Message",
+      "ui": {
+        "widget": "textarea",
+        "showInList": true,
+        "showInForm": true
+      },
+      "exportable": true
+    },
+    "error_stack": {
+      "type": "text",
+      "label": "Stack Trace",
+      "ui": {
+        "widget": "textarea",
+        "showInList": false,
+        "showInForm": true
+      },
+      "exportable": true
+    },
+    "request_id": {
+      "type": "string",
+      "label": "Request ID",
+      "ui": {
+        "widget": "text",
+        "showInList": true,
+        "showInForm": true
+      },
+      "exportable": true
+    },
+    "user": {
+      "$ref": "User",
+      "label": "User",
+      "$relation": {
+        "type": "many2One",
+        "labelField": "nickname"
+      },
+      "ui": {
+        "widget": "select",
+        "showInList": true,
+        "showInForm": true
+      }
+    },
+    "createdAt": {
+      "type": "datetime",
+      "label": "Created At",
+      "writable": false,
+      "ui": {
+        "widget": "datetime",
+        "showInList": true,
+        "showInForm": false,
+        "sortable": true
+      },
+      "exportable": true
+    }
+  }
+}

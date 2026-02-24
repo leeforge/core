@@ -1,0 +1,135 @@
+{
+  "$schema": "https://raw.githubusercontent.com/leeforge/schema/main/schema.json",
+  "name": "Media",
+  "description": "Media Resources",
+  "softDelete": false,
+  "info": {
+    "collectionName": "media",
+    "displayName": "Media Library",
+    "description": "Manage uploaded files and media",
+    "icon": "Picture",
+    "locale": "en-US"
+  },
+  "ui": {
+    "submitText": "Upload",
+    "resetText": "Reset",
+    "showReset": true,
+    "layout": {
+      "direction": "vertical",
+      "gap": 16,
+      "columns": 2
+    }
+  },
+  "features": {
+    "softDelete": false,
+    "export": true,
+    "import": false,
+    "batch": true
+  },
+  "properties": {
+    "id": {
+      "type": "uid",
+      "label": "ID",
+      "description": "Unique Identifier",
+      "private": true,
+      "writable": false,
+      "ui": {
+        "showInList": true,
+        "showInForm": false
+      }
+    },
+    "alias": {
+      "type": "string",
+      "label": "Alias",
+      "ui": {
+        "widget": "text",
+        "span": 12,
+        "showInList": true,
+        "showInForm": true,
+        "filterable": true
+      },
+      "queryable": true,
+      "exportable": true
+    },
+    "filename": {
+      "type": "string",
+      "label": "Filename",
+      "writable": false,
+      "ui": {
+        "widget": "text",
+        "showInList": true,
+        "showInForm": true
+      },
+      "exportable": true
+    },
+    "url": {
+      "type": "string",
+      "label": "URL",
+      "writable": false,
+      "ui": {
+        "widget": "image",
+        "showInList": true,
+        "showInForm": true
+      },
+      "exportable": true
+    },
+    "mime_type": {
+      "type": "string",
+      "label": "MIME Type",
+      "writable": false,
+      "ui": {
+        "widget": "text",
+        "showInList": true,
+        "showInForm": true
+      },
+      "exportable": true
+    },
+    "size": {
+      "type": "integer",
+      "label": "Size (Bytes)",
+      "writable": false,
+      "ui": {
+        "widget": "number",
+        "showInList": true,
+        "showInForm": true
+      },
+      "exportable": true
+    },
+    "owner": {
+      "$ref": "User",
+      "label": "Uploader",
+      "$relation": {
+        "type": "many2One",
+        "labelField": "nickname"
+      },
+      "ui": {
+        "widget": "select",
+        "showInList": true,
+        "showInForm": false
+      }
+    },
+    "createdAt": {
+      "type": "datetime",
+      "label": "Uploaded At",
+      "writable": false,
+      "ui": {
+        "widget": "datetime",
+        "showInList": true,
+        "showInForm": false,
+        "sortable": true
+      },
+      "exportable": true
+    },
+    "updatedAt": {
+      "type": "datetime",
+      "label": "Updated At",
+      "writable": false,
+      "ui": {
+        "widget": "datetime",
+        "showInList": true,
+        "showInForm": false
+      },
+      "exportable": true
+    }
+  }
+}

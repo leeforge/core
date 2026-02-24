@@ -1,0 +1,111 @@
+{
+  "$schema": "https://raw.githubusercontent.com/leeforge/schema/main/schema.json",
+  "name": "AuditLog",
+  "description": "System Audit Logs",
+  "softDelete": false,
+  "info": {
+    "collectionName": "audit_logs",
+    "displayName": "Audit Logs",
+    "description": "View business audit events",
+    "icon": "Shield",
+    "locale": "en-US"
+  },
+  "ui": {
+    "submitText": "",
+    "resetText": "",
+    "showReset": false,
+    "layout": {
+      "direction": "vertical",
+      "gap": 16,
+      "columns": 2
+    }
+  },
+  "features": {
+    "softDelete": false,
+    "export": true,
+    "import": false,
+    "batch": false
+  },
+  "properties": {
+    "id": {
+      "type": "uid",
+      "label": "ID",
+      "description": "Unique Identifier",
+      "private": true,
+      "ui": {
+        "showInList": true,
+        "showInForm": true
+      }
+    },
+    "action": {
+      "type": "string",
+      "label": "Action",
+      "ui": {
+        "widget": "text",
+        "showInList": true,
+        "showInForm": true,
+        "filterable": true
+      },
+      "queryable": true,
+      "exportable": true
+    },
+    "resource": {
+      "type": "string",
+      "label": "Resource",
+      "ui": {
+        "widget": "text",
+        "showInList": true,
+        "showInForm": true,
+        "filterable": true
+      },
+      "queryable": true,
+      "exportable": true
+    },
+    "resource_id": {
+      "type": "string",
+      "label": "Resource ID",
+      "ui": {
+        "widget": "text",
+        "showInList": true,
+        "showInForm": true,
+        "filterable": true
+      },
+      "queryable": true,
+      "exportable": true
+    },
+    "ip_address": {
+      "type": "string",
+      "label": "IP Address",
+      "ui": {
+        "widget": "text",
+        "showInList": true,
+        "showInForm": true,
+        "filterable": true
+      },
+      "queryable": true,
+      "exportable": true
+    },
+    "user_agent": {
+      "type": "string",
+      "label": "User Agent",
+      "ui": {
+        "widget": "text",
+        "showInList": false,
+        "showInForm": true
+      },
+      "exportable": true
+    },
+    "createdAt": {
+      "type": "datetime",
+      "label": "Created At",
+      "writable": false,
+      "ui": {
+        "widget": "datetime",
+        "showInList": true,
+        "showInForm": false,
+        "sortable": true
+      },
+      "exportable": true
+    }
+  }
+}

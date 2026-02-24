@@ -2,8 +2,6 @@ package modules
 
 import (
 	"fmt"
-	"net/http"
-	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -12,7 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	corecore "github.com/leeforge/core/core"
-	"github.com/leeforge/core/host"
+	coremw "github.com/leeforge/core/middleware"
 
 	"github.com/leeforge/core/server/config"
 	"github.com/leeforge/core/server/ent"
@@ -57,13 +55,11 @@ func registerBusinessModules(router chi.Router, rawConfig any, logger *zap.Logge
 
 	baseLogger := frameLogging.FromZap(logger)
 	cfg, client := resolveRuntimeInput(rawConfig, cfg)
-	apiRouter := host.NewRouteRegistryRouter(chi.NewRouter(), "core")
 	deps := &corecore.Dependencies{
 		Client:      client,
 		Config:      cfg,
 		PermManager: &pkgAuth.PermissionManager{},
 		PermSyncer:  permissionsync.NewSyncer(client, baseLogger),
-		Router:      apiRouter,
 	}
 	deps.DomainService = domainSvc.NewService(client, baseLogger)
 	deps.InvitationProviders = corecore.NewInvitationProviderRegistry()
@@ -93,38 +89,52 @@ func registerBusinessModules(router chi.Router, rawConfig any, logger *zap.Logge
 	authModule := auth.NewAuthModule(baseLogger, deps)
 	deps.JWTService = authModule.GetJWTService()
 
-	authModule.RegisterPublicRoutes(apiRouter)
-	privateRouter := apiRouter.Group(func(pr chi.Router) {
-		authModule.RegisterPrivateRoutes(pr)
+	pluginRouter := resolvePluginRouter(rawConfig)
+
+	router.Route(defaultBusinessPrefix, func(api chi.Router) {
+		deps.Router = api
+
+		// Public routes — no authentication required.
+		authModule.RegisterPublicRoutes(api)
+
+		// Private routes — JWT authentication + domain resolution.
+		private := api.With(
+			auth.JWTMiddleware(authModule.GetJWTService()),
+			coremw.DomainResolverMiddleware(&coremw.DomainResolverConfig{
+				Logger:        baseLogger,
+				DomainService: deps.DomainService,
+			}),
+		)
+		authModule.RegisterPrivateRoutes(private)
+
+		// Merge plugin routes into the private sub-router (requires auth + domain context).
+		mergePluginRoutes(private, pluginRouter)
+
+		corecore.BootstrapModules(
+			api,
+			private,
+			baseLogger,
+			deps,
+			initmod.NewInitModule,
+			user.NewUserModule,
+			role.NewRoleModule,
+			permission.NewPermissionModule,
+			menu.NewMenuModule,
+			dictionary.NewDictionaryModule,
+			domainmod.NewDomainModule,
+			media.NewMediaModule,
+			apikey.NewAPIKeyModule,
+			schema.NewSchemaModule,
+			mcp.NewMCPModule,
+			auditlog.NewAuditLogModule,
+			operationlog.NewOperationLogModule,
+			systemerror.NewSystemErrorModule,
+			func(frameLogging.Logger, *corecore.Dependencies) corecore.Module {
+				return captchaModule
+			},
+		)
 	})
 
-	corecore.BootstrapModules(
-		apiRouter,
-		privateRouter,
-		baseLogger,
-		deps,
-		initmod.NewInitModule,
-		user.NewUserModule,
-		role.NewRoleModule,
-		permission.NewPermissionModule,
-		menu.NewMenuModule,
-		dictionary.NewDictionaryModule,
-		domainmod.NewDomainModule,
-		media.NewMediaModule,
-		apikey.NewAPIKeyModule,
-		schema.NewSchemaModule,
-		mcp.NewMCPModule,
-		auditlog.NewAuditLogModule,
-		operationlog.NewOperationLogModule,
-		systemerror.NewSystemErrorModule,
-		func(frameLogging.Logger, *corecore.Dependencies) corecore.Module {
-			return captchaModule
-		},
-	)
-
-	if err := mergeRoutesWithPrefix(router, apiRouter, defaultBusinessPrefix); err != nil {
-		return fmt.Errorf("merge business routes: %w", err)
-	}
 	return nil
 }
 
@@ -197,56 +207,29 @@ func parseDuration(raw string, fallback time.Duration) time.Duration {
 	return d
 }
 
-type routeOwnerLookup interface {
-	LookupRouteOwner(method, path string) (string, bool)
-}
-
-type ownerScopedRouter interface {
-	WithOwner(owner string) chi.Router
-}
-
-func mergeRoutesWithPrefix(dst chi.Router, src chi.Routes, prefix string) error {
-	var lookup routeOwnerLookup
-	if typed, ok := src.(routeOwnerLookup); ok {
-		lookup = typed
-	}
-	return chi.Walk(src, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
-		fullPath := joinPath(prefix, route)
-		target := dst
-		if lookup != nil {
-			if owner, ok := lookup.LookupRouteOwner(method, route); ok {
-				if scoped, ok := dst.(ownerScopedRouter); ok {
-					target = scoped.WithOwner(owner)
-				}
-			}
-		}
-		target.Method(method, fullPath, chain(handler, middlewares...))
+func resolvePluginRouter(raw any) chi.Router {
+	wrapped, ok := raw.(map[string]any)
+	if !ok {
 		return nil
-	})
+	}
+	pr, exists := wrapped["pluginRouter"]
+	if !exists {
+		return nil
+	}
+	typed, ok := pr.(chi.Router)
+	if !ok {
+		return nil
+	}
+	return typed
 }
 
-func chain(handler http.Handler, middlewares ...func(http.Handler) http.Handler) http.Handler {
-	wrapped := handler
-	for i := len(middlewares) - 1; i >= 0; i-- {
-		wrapped = middlewares[i](wrapped)
+func mergePluginRoutes(target chi.Router, source chi.Router) {
+	if source == nil {
+		return
 	}
-	return wrapped
-}
-
-func joinPath(prefix, route string) string {
-	left := strings.TrimSuffix(strings.TrimSpace(prefix), "/")
-	right := strings.TrimSpace(route)
-	if right == "" {
-		right = "/"
+	pluginTarget := target
+	if scoped, ok := any(target).(interface{ WithOwner(string) chi.Router }); ok {
+		pluginTarget = scoped.WithOwner("plugins")
 	}
-	if !strings.HasPrefix(right, "/") {
-		right = "/" + right
-	}
-	if right != "/" {
-		right = strings.TrimSuffix(right, "/")
-	}
-	if left == "" {
-		return right
-	}
-	return left + right
+	pluginTarget.Mount("/", source)
 }

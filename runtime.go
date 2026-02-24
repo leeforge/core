@@ -102,14 +102,15 @@ func BuildRuntime(ctx context.Context, opts RuntimeOptions) (Runtime, error) {
 		return nil, &ErrConfigLoad{Cause: fmt.Errorf("config path is required")}
 	}
 
-	logger := opts.Logger
-	if logger == nil {
-		logger = zap.NewNop()
-	}
-
 	cfg, err := loadRuntimeConfig(opts.ConfigPath)
 	if err != nil {
 		return nil, &ErrConfigLoad{Cause: err}
+	}
+
+	// Use explicitly provided logger, otherwise create one from loaded log config.
+	logger := opts.Logger
+	if logger == nil {
+		logger = frameLogging.NewLogger(cfg.Log.ToLoggingConfig()).Zap()
 	}
 
 	provider := opts.ResourceProvider
@@ -128,22 +129,25 @@ func BuildRuntime(ctx context.Context, opts RuntimeOptions) (Runtime, error) {
 		resources.Closers = append(resources.Closers, resources.CoreClient)
 	}
 
-	runtimeConfig := map[string]any{
-		"config": cfg,
-	}
-	if resources.CoreClient != nil {
-		runtimeConfig["client"] = resources.CoreClient
-	}
-
 	registrar := opts.PluginRegistrar
 	if opts.SkipPlugins {
 		registrar = nil
 	}
 
 	router := host.NewRouteRegistryRouter(chi.NewRouter(), "runtime")
-	pluginRuntime, err := bootstrapPlugins(ctx, router, opts.BasePath, resources, logger, registrar)
+	pluginRuntime, pluginRouter, err := bootstrapPlugins(ctx, resources, logger, registrar)
 	if err != nil {
 		return nil, err
+	}
+
+	runtimeConfig := map[string]any{
+		"config": cfg,
+	}
+	if resources.CoreClient != nil {
+		runtimeConfig["client"] = resources.CoreClient
+	}
+	if pluginRouter != nil {
+		runtimeConfig["pluginRouter"] = pluginRouter
 	}
 
 	coreModules := buildModuleBootstrapper(opts.Modules)
@@ -241,14 +245,12 @@ func buildModuleBootstrapper(extra []host.ModuleBootstrapper) host.ModuleBootstr
 
 func bootstrapPlugins(
 	ctx context.Context,
-	router chi.Router,
-	basePath string,
 	resources *RuntimeResources,
 	logger *zap.Logger,
 	registrar PluginRegistrar,
-) (*frameworkruntime.Runtime, error) {
+) (*frameworkruntime.Runtime, chi.Router, error) {
 	if registrar == nil {
-		return nil, nil
+		return nil, nil, nil
 	}
 	if logger == nil {
 		logger = zap.NewNop()
@@ -256,14 +258,7 @@ func bootstrapPlugins(
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	if router == nil {
-		return nil, &host.ErrPluginBootstrap{Cause: fmt.Errorf("plugin router is nil")}
-	}
 
-	base := strings.TrimSpace(basePath)
-	if base == "" {
-		base = host.DefaultBasePath
-	}
 	pluginRouter := chi.NewRouter()
 	pluginRT := frameworkruntime.NewRuntime(frameworkruntime.Config{
 		Router: pluginRouter,
@@ -272,37 +267,33 @@ func bootstrapPlugins(
 
 	services := pluginRT.Services()
 	if services == nil {
-		return nil, &host.ErrPluginBootstrap{Cause: fmt.Errorf("plugin service registry is nil")}
+		return nil, nil, &host.ErrPluginBootstrap{Cause: fmt.Errorf("plugin service registry is nil")}
 	}
 
 	if resources != nil && resources.CoreClient != nil {
+		if err := services.Register("core.ent.client", resources.CoreClient); err != nil {
+			return nil, nil, &host.ErrPluginBootstrap{Cause: fmt.Errorf("register ent client: %w", err)}
+		}
 		domainService := domainSvc.NewService(resources.CoreClient, frameLogging.FromZap(logger))
 		if err := services.Register("domain.service", newDomainWriterAdapter(domainService)); err != nil {
-			return nil, &host.ErrPluginBootstrap{Cause: fmt.Errorf("register domain service: %w", err)}
+			return nil, nil, &host.ErrPluginBootstrap{Cause: fmt.Errorf("register domain service: %w", err)}
 		}
 	}
 	invites := NewInvitationProviderRegistry()
 	if err := services.Register(InvitationProviderRegistryServiceKey, invites); err != nil {
-		return nil, &host.ErrPluginBootstrap{Cause: fmt.Errorf("register invitation registry: %w", err)}
+		return nil, nil, &host.ErrPluginBootstrap{Cause: fmt.Errorf("register invitation registry: %w", err)}
 	}
 
 	if err := registrar(pluginRT, services, logger); err != nil {
-		return nil, &host.ErrPluginBootstrap{Cause: err}
+		return nil, nil, &host.ErrPluginBootstrap{Cause: err}
 	}
 
 	if err := pluginRT.Bootstrap(ctx); err != nil {
-		return nil, &host.ErrPluginBootstrap{Cause: fmt.Errorf("bootstrap plugins: %w", err)}
+		return nil, nil, &host.ErrPluginBootstrap{Cause: fmt.Errorf("bootstrap plugins: %w", err)}
 	}
 
-	if scoped, ok := router.(interface {
-		WithOwner(string) chi.Router
-	}); ok {
-		scoped.WithOwner("plugins").Mount(base, pluginRouter)
-	} else {
-		router.Mount(base, pluginRouter)
-	}
-
-	return pluginRT, nil
+	// Don't mount here — caller merges plugin routes into the shared API sub-router.
+	return pluginRT, pluginRouter, nil
 }
 
 func loadRuntimeConfig(configPath string) (*config.Config, error) {

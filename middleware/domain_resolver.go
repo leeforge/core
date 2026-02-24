@@ -21,20 +21,20 @@ const (
 	metadataImpersonateExpiry = "impersonate_expiry"
 )
 
-// DomainResolverV2Config configures the V2 domain resolver.
-type DomainResolverV2Config struct {
+// DomainResolverConfig configures the domain resolver middleware.
+type DomainResolverConfig struct {
 	Logger        logging.Logger
 	DomainService core.DomainResolver
 }
 
-// DomainResolverV2Middleware resolves acting domain with new protocol support.
+// DomainResolverMiddleware resolves acting domain with protocol support.
 //
 // Resolution priority:
 //  1. X-Domain-Type + X-Domain-Key headers (new protocol)
 //  2. X-Tenant-ID header (backward compat, maps to tenant:<value>)
 //  3. Token defaultDomain from DomainMembership (is_default=true)
 //  4. Platform fallback for super admins
-func DomainResolverV2Middleware(cfg *DomainResolverV2Config) func(http.Handler) http.Handler {
+func DomainResolverMiddleware(cfg *DomainResolverConfig) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			identity, ok := core.GetIdentity(r.Context())

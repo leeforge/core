@@ -208,6 +208,11 @@ func normalizePath(path, basePath string) string {
 	if normalized == "" {
 		return "/"
 	}
+	// Strip chi mount-point wildcard markers (e.g. /*/tenants → /tenants).
+	normalized = strings.ReplaceAll(normalized, "/*", "")
+	if normalized == "" {
+		normalized = "/"
+	}
 	if basePath != "" && strings.HasPrefix(normalized, basePath) {
 		normalized = strings.TrimPrefix(normalized, basePath)
 		if normalized == "" {
@@ -216,6 +221,10 @@ func normalizePath(path, basePath string) string {
 	}
 	if !strings.HasPrefix(normalized, "/") {
 		normalized = "/" + normalized
+	}
+	// Strip trailing slash for non-root paths (OpenAPI convention).
+	if len(normalized) > 1 {
+		normalized = strings.TrimRight(normalized, "/")
 	}
 	return normalized
 }

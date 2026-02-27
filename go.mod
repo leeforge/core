@@ -11,7 +11,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
 	github.com/labstack/echo/v4 v4.13.4
-	github.com/leeforge/framework v0.1.0
+	github.com/leeforge/framework v0.2.0
 	github.com/lib/pq v1.10.9
 	github.com/modelcontextprotocol/go-sdk v1.2.0
 	github.com/mojocn/base64Captcha v1.3.8
@@ -23,8 +23,6 @@ require (
 	golang.org/x/crypto v0.46.0
 	gopkg.in/yaml.v3 v3.0.1
 )
-
-replace github.com/leeforge/framework => ../framework
 
 require (
 	ariga.io/atlas v0.32.1-0.20250325101103-175b25e1c1b9 // indirect

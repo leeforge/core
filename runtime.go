@@ -13,6 +13,7 @@ import (
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 
+	corecore "github.com/leeforge/core/core"
 	"github.com/leeforge/core/host"
 	"github.com/leeforge/core/modules"
 	"github.com/leeforge/core/server/config"
@@ -30,6 +31,7 @@ type PluginRegistrar func(rt *frameworkruntime.Runtime, services *frameplugin.Se
 type RuntimeOptions struct {
 	ConfigPath       string
 	Modules          []host.ModuleBootstrapper
+	ModuleFactories  []corecore.ModuleFactory
 	ResourceProvider ResourceProvider
 	SkipPlugins      bool
 	SkipMigrate      bool
@@ -150,7 +152,7 @@ func BuildRuntime(ctx context.Context, opts RuntimeOptions) (Runtime, error) {
 		runtimeConfig["pluginRouter"] = pluginRouter
 	}
 
-	coreModules := buildModuleBootstrapper(opts.Modules)
+	coreModules := buildModuleBootstrapper(opts.Modules, opts.ModuleFactories)
 
 	if err := host.RegisterAllChi(router, host.CoreOptions{
 		Logger:             logger,
@@ -222,9 +224,9 @@ func resolveEntDriver(dsn string) (string, error) {
 	}
 }
 
-func buildModuleBootstrapper(extra []host.ModuleBootstrapper) host.ModuleBootstrapper {
+func buildModuleBootstrapper(extra []host.ModuleBootstrapper, factories []corecore.ModuleFactory) host.ModuleBootstrapper {
 	return func(router chi.Router, cfg any, logger *zap.Logger) error {
-		if err := modules.Bootstrap(router, cfg, logger); err != nil {
+		if err := modules.BootstrapWithExtras(router, cfg, logger, factories); err != nil {
 			return err
 		}
 		for i, bootstrap := range extra {

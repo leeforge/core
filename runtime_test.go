@@ -9,8 +9,11 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
+	corecore "github.com/leeforge/core/core"
+	"github.com/leeforge/core/host"
 	"github.com/leeforge/core/server/config"
 	frameplugin "github.com/leeforge/framework/plugin"
+	frameLogging "github.com/leeforge/framework/logging"
 	frameworkruntime "github.com/leeforge/framework/runtime"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -120,4 +123,63 @@ func (d *dummyPlugin) RegisterRoutes(router chi.Router) {
 	router.Get("/tenants", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
+}
+
+// dummyModule is a minimal Module implementation for testing ModuleFactories.
+type dummyModule struct {
+	name string
+}
+
+func (m *dummyModule) Name() string                          { return m.name }
+func (m *dummyModule) RegisterPublicRoutes(router chi.Router) {}
+func (m *dummyModule) RegisterPrivateRoutes(router chi.Router) {
+	router.Get("/"+m.name, func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(m.name))
+	})
+}
+
+func TestBuildRuntime_ModuleFactoriesRegistersExternalModule(t *testing.T) {
+	dir := t.TempDir()
+	writeRuntimeConfigFiles(t, dir)
+
+	rt, err := BuildRuntime(context.Background(), RuntimeOptions{
+		ConfigPath:       dir,
+		ResourceProvider: staticResourceProvider{resources: &RuntimeResources{}},
+		SkipMigrate:      true,
+		ModuleFactories: []corecore.ModuleFactory{
+			func(_ frameLogging.Logger, _ *corecore.Dependencies) corecore.Module {
+				return &dummyModule{name: "external-test"}
+			},
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, rt)
+	require.NotNil(t, rt.Handler())
+}
+
+func TestBuildRuntime_ModuleFactoriesAndModulesCoexist(t *testing.T) {
+	dir := t.TempDir()
+	writeRuntimeConfigFiles(t, dir)
+
+	moduleCalled := false
+	rt, err := BuildRuntime(context.Background(), RuntimeOptions{
+		ConfigPath:       dir,
+		ResourceProvider: staticResourceProvider{resources: &RuntimeResources{}},
+		SkipMigrate:      true,
+		ModuleFactories: []corecore.ModuleFactory{
+			func(_ frameLogging.Logger, _ *corecore.Dependencies) corecore.Module {
+				return &dummyModule{name: "factory-module"}
+			},
+		},
+		Modules: []host.ModuleBootstrapper{
+			func(_ chi.Router, _ any, _ *zap.Logger) error {
+				moduleCalled = true
+				return nil
+			},
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, rt)
+	require.True(t, moduleCalled, "legacy Modules bootstrapper should still be called")
 }

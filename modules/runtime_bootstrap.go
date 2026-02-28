@@ -40,7 +40,7 @@ import (
 
 const defaultBusinessPrefix = "/api/v1"
 
-func registerBusinessModules(router chi.Router, rawConfig any, logger *zap.Logger) error {
+func registerBusinessModules(router chi.Router, rawConfig any, logger *zap.Logger, extraFactories ...corecore.ModuleFactory) error {
 	if router == nil {
 		return fmt.Errorf("router is nil")
 	}
@@ -110,11 +110,7 @@ func registerBusinessModules(router chi.Router, rawConfig any, logger *zap.Logge
 		// Merge plugin routes into the private sub-router (requires auth + domain context).
 		mergePluginRoutes(private, pluginRouter)
 
-		corecore.BootstrapModules(
-			api,
-			private,
-			baseLogger,
-			deps,
+		allFactories := []corecore.ModuleFactory{
 			initmod.NewInitModule,
 			user.NewUserModule,
 			role.NewRoleModule,
@@ -132,6 +128,14 @@ func registerBusinessModules(router chi.Router, rawConfig any, logger *zap.Logge
 			func(frameLogging.Logger, *corecore.Dependencies) corecore.Module {
 				return captchaModule
 			},
+		}
+		allFactories = append(allFactories, extraFactories...)
+		corecore.BootstrapModules(
+			api,
+			private,
+			baseLogger,
+			deps,
+			allFactories...,
 		)
 	})
 

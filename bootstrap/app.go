@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
 
 	"github.com/leeforge/core/host"
 	"github.com/leeforge/core/modules"
@@ -20,7 +21,10 @@ func BootstrapAllModules(router chi.Router, opts *host.CoreOptions) error {
 		effective = *opts
 	}
 	if effective.ModuleBootstrapper == nil {
-		effective.ModuleBootstrapper = modules.Bootstrap
+		// Wrap modules.Bootstrap to match host.ModuleBootstrapper signature
+		effective.ModuleBootstrapper = func(router chi.Router, cfg any, logger *zap.Logger) error {
+			return modules.Bootstrap(router, cfg, logger)
+		}
 	}
 	return host.RegisterAllChi(router, effective)
 }

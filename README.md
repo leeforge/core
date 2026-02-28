@@ -59,14 +59,14 @@ func main() {
 
 ```go
 type RuntimeOptions struct {
-	ConfigPath       string                  // 配置文件目录路径
-	Modules          []host.ModuleBootstrapper // 模块列表（可选）
-	ResourceProvider ResourceProvider         // 数据库和资源提供者（可选）
-	SkipPlugins      bool                    // 跳过插件加载（开发/测试时常用）
-	SkipMigrate      bool                    // 跳过数据库迁移
-	BasePath         string                  // API 基路径（默认：/api/v1）
-	Logger           *zap.Logger             // 日志实例（可选）
-	PluginRegistrar  PluginRegistrar         // 插件注册回调函数
+	ConfigPath       string                       // 配置文件目录路径
+	ModuleFactories  []corecore.ModuleFactory     // 外部模块工厂列表（可选）
+	ResourceProvider ResourceProvider              // 数据库和资源提供者（可选）
+	SkipPlugins      bool                         // 跳过插件加载（开发/测试时常用）
+	SkipMigrate      bool                         // 跳过数据库迁移
+	BasePath         string                       // API 基路径（默认：/api/v1）
+	Logger           *zap.Logger                  // 日志实例（可选）
+	PluginRegistrar  PluginRegistrar              // 插件注册回调函数
 }
 ```
 
@@ -238,9 +238,47 @@ type RuntimeResources struct {
 
 ### 添加新模块
 
-1. 在 `server/core/modules/` 中实现 `ModuleBootstrapper` 接口
-2. 在配置中注册模块
+1. 在 `server/core/modules/` 中实现 `ModuleFactory` 工厂函数，返回实现 `Module` 接口的结构体
+2. 在 `RuntimeOptions.ModuleFactories` 中注册该工厂函数
 3. 运行时自动启动模块的 HTTP 处理器
+
+#### ModuleFactory 注册示例
+
+```go
+// 1. 创建模块实现
+type MyCustomModule struct {
+    logger frameLogging.Logger
+    deps   *corecore.Dependencies
+}
+
+func (m *MyCustomModule) Name() string { return "my-custom-module" }
+
+func (m *MyCustomModule) RegisterPublicRoutes(router chi.Router) {
+    router.Get("/public-endpoint", /* handler */)
+}
+
+func (m *MyCustomModule) RegisterPrivateRoutes(router chi.Router) {
+    router.Get("/private-endpoint", /* handler */)
+}
+
+// 2. 创建工厂函数
+func NewMyCustomModule(logger frameLogging.Logger, deps *corecore.Dependencies) corecore.Module {
+    return &MyCustomModule{
+        logger: logger,
+        deps:   deps,
+    }
+}
+
+// 3. 在 RuntimeOptions 中注册
+opts := core.RuntimeOptions{
+    ConfigPath:      "./configs",
+    ModuleFactories: []corecore.ModuleFactory{
+        NewMyCustomModule,  // 注册你的工厂函数
+    },
+}
+
+rt, _ := core.BuildRuntime(context.Background(), opts)
+```
 
 ### 添加自定义中间件
 

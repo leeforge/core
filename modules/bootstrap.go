@@ -7,12 +7,7 @@ import (
 	corecore "github.com/leeforge/core/core"
 )
 
-// Bootstrap registers core-owned business modules on the router.
-func Bootstrap(router chi.Router, cfg any, logger *zap.Logger) error {
-	return registerBusinessModules(router, cfg, logger)
-}
-
-// BootstrapWithExtras registers core-owned business modules plus external module factories on the router.
-func BootstrapWithExtras(router chi.Router, cfg any, logger *zap.Logger, extras []corecore.ModuleFactory) error {
-	return registerBusinessModules(router, cfg, logger, extras...)
+// Bootstrap registers core-owned business modules plus external module factories on the router.
+func Bootstrap(router chi.Router, cfg any, logger *zap.Logger, factories ...corecore.ModuleFactory) error {
+	return registerBusinessModules(router, cfg, logger, factories...)
 }

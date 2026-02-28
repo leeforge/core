@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	corecore "github.com/leeforge/core/core"
-	"github.com/leeforge/core/host"
 	"github.com/leeforge/core/server/config"
 	frameplugin "github.com/leeforge/framework/plugin"
 	frameLogging "github.com/leeforge/framework/logging"
@@ -156,30 +155,4 @@ func TestBuildRuntime_ModuleFactoriesRegistersExternalModule(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, rt)
 	require.NotNil(t, rt.Handler())
-}
-
-func TestBuildRuntime_ModuleFactoriesAndModulesCoexist(t *testing.T) {
-	dir := t.TempDir()
-	writeRuntimeConfigFiles(t, dir)
-
-	moduleCalled := false
-	rt, err := BuildRuntime(context.Background(), RuntimeOptions{
-		ConfigPath:       dir,
-		ResourceProvider: staticResourceProvider{resources: &RuntimeResources{}},
-		SkipMigrate:      true,
-		ModuleFactories: []corecore.ModuleFactory{
-			func(_ frameLogging.Logger, _ *corecore.Dependencies) corecore.Module {
-				return &dummyModule{name: "factory-module"}
-			},
-		},
-		Modules: []host.ModuleBootstrapper{
-			func(_ chi.Router, _ any, _ *zap.Logger) error {
-				moduleCalled = true
-				return nil
-			},
-		},
-	})
-	require.NoError(t, err)
-	require.NotNil(t, rt)
-	require.True(t, moduleCalled, "legacy Modules bootstrapper should still be called")
 }

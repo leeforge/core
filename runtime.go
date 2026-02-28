@@ -30,7 +30,6 @@ type PluginRegistrar func(rt *frameworkruntime.Runtime, services *frameplugin.Se
 
 type RuntimeOptions struct {
 	ConfigPath       string
-	Modules          []host.ModuleBootstrapper
 	ModuleFactories  []corecore.ModuleFactory
 	ResourceProvider ResourceProvider
 	SkipPlugins      bool
@@ -152,7 +151,7 @@ func BuildRuntime(ctx context.Context, opts RuntimeOptions) (Runtime, error) {
 		runtimeConfig["pluginRouter"] = pluginRouter
 	}
 
-	coreModules := buildModuleBootstrapper(opts.Modules, opts.ModuleFactories)
+	coreModules := buildModuleBootstrapper(opts.ModuleFactories)
 
 	if err := host.RegisterAllChi(router, host.CoreOptions{
 		Logger:             logger,
@@ -224,24 +223,9 @@ func resolveEntDriver(dsn string) (string, error) {
 	}
 }
 
-func buildModuleBootstrapper(extra []host.ModuleBootstrapper, factories []corecore.ModuleFactory) host.ModuleBootstrapper {
+func buildModuleBootstrapper(factories []corecore.ModuleFactory) host.ModuleBootstrapper {
 	return func(router chi.Router, cfg any, logger *zap.Logger) error {
-		if err := modules.BootstrapWithExtras(router, cfg, logger, factories); err != nil {
-			return err
-		}
-		for i, bootstrap := range extra {
-			if bootstrap == nil {
-				continue
-			}
-			target := router
-			if scoped, ok := any(router).(interface{ WithOwner(string) chi.Router }); ok {
-				target = scoped.WithOwner(fmt.Sprintf("module[%d]", i))
-			}
-			if err := bootstrap(target, cfg, logger); err != nil {
-				return err
-			}
-		}
-		return nil
+		return modules.Bootstrap(router, cfg, logger, factories...)
 	}
 }
 
